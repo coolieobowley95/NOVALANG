@@ -16,6 +16,10 @@
     Name: Jonathan Masters
     ID#: 2100098
     Email: jonathanmasters2018@gmail.com
+# Member 5:
+    Name: Shavon Scale
+    ID#: 2008093
+    Email: shavonscale@gmail.com
 
 NOVALANG Parser - Syntax Analysis Module
 Builds Abstract Syntax Tree (AST) for the NOVALANG language
