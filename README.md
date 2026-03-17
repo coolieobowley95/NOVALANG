@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Group Members: 
 # Member 1:
     Name: Tashana Henry 
@@ -314,3 +315,7 @@ The goal of this project is to demonstrate how programming languages are impleme
 NOVALANG provides a simplified environment for studying programming language design and implementation.
 
 ---
+=======
+# NOVALANG
+NOVALANG is a mini programming language designed for educational purposes to demonstrate compiler and interpreter concepts, including lexical analysis, syntax parsing, semantic analysis, and execution. It supports both explicit and implicit variable declaration, arithmetic operations, operator precedence, exception handling, and basic I/O.
+>>>>>>> 9084398de947016940539bb48f0fd56b13440780
