@@ -1,3 +1,30 @@
+"""
+# Group Members: 
+# Member 1:
+    Name: Tashana Henry 
+    ID: 1804274
+    Email: Henrytashana09@gmail.com
+# Member 2:
+    Name: Orine Stephenson, 
+    ID: 2005009
+    Email: orinestephenson4@gmail.com
+# Member 3:
+    Name: Coolieo Bowley 
+    ID: 2003923 
+    Email: coolieobowley95@gmail.com
+# Member 4:
+    Name: Jonathan Masters
+    ID#: 2100098
+    Email: jonathanmasters2018@gmail.com
+# Member 5:
+    Name: Shavon Scale
+    ID#: 2008093
+    Email: shavonscale@gmail.com
+    
+NOVALANG Interpreter - Semantic Analysis & Execution Module
+Executes the AST and manages runtime state
+"""
+
 from flask import Flask, request, jsonify, send_from_directory
 from parser import parser
 from interpreter import run, global_env, NovaError
@@ -37,7 +64,7 @@ def run_code():
         old_stdout = sys.stdout
         sys.stdout = buffer = io.StringIO()
 
-        run(ast, global_env)
+        run(ast, {})
 
         sys.stdout = old_stdout
         output = buffer.getvalue()
