@@ -81,18 +81,24 @@ Output will appear here...
 async function runCode() {
     const code = document.getElementById("code").value;
 
-    const res = await fetch("https://novalang-4x9v.onrender.com/run", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ code })
-    });
+    try {
+        const res = await fetch("/run", {   // ✅ FIXED (relative path)
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ code })
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    document.getElementById("output").innerText =
-        data.output || data.error;
+        document.getElementById("output").innerText =
+            data.output || data.error;
+
+    } catch (err) {
+        document.getElementById("output").innerText =
+            "Error connecting to server.";
+    }
 }
 </script>
 
