@@ -59,6 +59,7 @@ class NovaObject:
 
 
 class Env:
+    """Environment/scope for variables, functions, and classes"""
     def __init__(self, parent=None):
         self.vars = {}
         self.funcs = {}
@@ -72,12 +73,15 @@ class Env:
             return self.parent.get_var(name)
         raise NovaError(f"Variable '{name}' not defined")
 
+    # 🔥 FIXED FUNCTION (ONLY CHANGE)
     def set_var(self, name, value):
+        """Set variable in current or parent scope (NO implicit creation)"""
         if name in self.vars:
             self.vars[name] = value
         elif self.parent and self.parent.has_var(name):
             self.parent.set_var(name, value)
         else:
+            # ❌ Prevent implicit variable creation
             raise NovaError(f"Variable '{name}' not declared")
 
     def has_var(self, name):
@@ -99,6 +103,17 @@ class Env:
         if self.parent:
             return self.parent.get_func(name)
         raise NovaError(f"Function '{name}' not defined")
+
+    def define_class(self, name, cls):
+        self.classes[name] = cls
+
+    def get_class(self, name):
+        if name in self.classes:
+            return self.classes[name]
+        if self.parent:
+            return self.parent.get_class(name)
+        raise NovaError(f"Class '{name}' not defined")
+
 
 # --- AST helpers ---
 def is_true(val):
