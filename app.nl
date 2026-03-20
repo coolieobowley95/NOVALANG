@@ -18,6 +18,99 @@
     Email: jonathanmasters2018@gmail.com
 # Member 5:
     Name: Shavon Scale
+    ID#: 2008093
+    Email: shavonscale@gmail.com
+    
+NOVALANG Interpreter - Semantic Analysis & Execution Module
+Executes the AST and manages runtime state
+"""
+
+from flask import Flask, request, jsonify, send_from_directory
+from parser import parser
+from interpreter import run, global_env, NovaError
+import io
+import sys
+
+app = Flask(__name__, static_folder=".")
+
+# ---------------------------
+# GUI ROUTE (FRONTEND)
+# ---------------------------
+@app.route("/")
+def home():
+    return send_from_directory(".", "index.html")
+
+
+# ---------------------------
+# API ROUTE (BACKEND EXECUTION)
+# ---------------------------
+@app.route("/run", methods=["POST"])
+def run_code():
+    try:
+        data = request.get_json()
+
+        if not data or "code" not in data:
+            return jsonify({"error": "No code provided"}), 400
+
+        code = data["code"]
+
+        # Parse code into AST
+        ast = parser.parse(code)
+
+        if ast is None:
+            return jsonify({"error": "Syntax error"}), 400
+
+        # Capture interpreter output
+        old_stdout = sys.stdout
+        sys.stdout = buffer = io.StringIO()
+
+        run(ast, global_env)
+
+        sys.stdout = old_stdout
+        output = buffer.getvalue()
+
+        return jsonify({
+            "output": output
+        })
+
+    except NovaError as e:
+        return jsonify({"error": str(e)}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------------------------
+# RUN SERVER
+# ---------------------------
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+
+
+
+"""
+# Group Members: 
+# Member 1:
+    Name: Tashana Henry 
+    ID: 1804274
+    Email: Henrytashana09@gmail.com
+# Member 2:
+    Name: Orine Stephenson, 
+    ID: 2005009
+    Email: orinestephenson4@gmail.com
+# Member 3:
+    Name: Coolieo Bowley 
+    ID: 2003923 
+    Email: coolieobowley95@gmail.com
+# Member 4:
+    Name: Jonathan Masters
+    ID#: 2100098
+    Email: jonathanmasters2018@gmail.com
+# Member 5:
+    Name: Shavon Scale
     ID: 2008093
     Email: shavonscale@gmail.com
 
@@ -59,6 +152,7 @@ class NovaObject:
 
 
 class Env:
+    """Environment/scope for variables, functions, and classes"""
     def __init__(self, parent=None):
         self.vars = {}
         self.funcs = {}
@@ -72,12 +166,15 @@ class Env:
             return self.parent.get_var(name)
         raise NovaError(f"Variable '{name}' not defined")
 
+    # 🔥 FIXED FUNCTION (ONLY CHANGE)
     def set_var(self, name, value):
+        """Set variable in current or parent scope (NO implicit creation)"""
         if name in self.vars:
             self.vars[name] = value
         elif self.parent and self.parent.has_var(name):
             self.parent.set_var(name, value)
         else:
+            # ❌ Prevent implicit variable creation
             raise NovaError(f"Variable '{name}' not declared")
 
     def has_var(self, name):
@@ -99,6 +196,18 @@ class Env:
         if self.parent:
             return self.parent.get_func(name)
         raise NovaError(f"Function '{name}' not defined")
+
+    def define_class(self, name, cls):
+        self.classes[name] = cls
+
+    def get_class(self, name):
+        if name in self.classes:
+            return self.classes[name]
+        if self.parent:
+            return self.parent.get_class(name)
+        raise NovaError(f"Class '{name}' not defined")
+
+
 
 # --- AST helpers ---
 def is_true(val):

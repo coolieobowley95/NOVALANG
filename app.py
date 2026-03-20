@@ -27,14 +27,15 @@ Executes the AST and manages runtime state
 
 from flask import Flask, request, jsonify, send_from_directory
 from parser import parser
-from interpreter import run, global_env, NovaError
+from interpreter import run, Env, NovaError
 import io
 import sys
 
 app = Flask(__name__, static_folder=".")
 
+
 # ---------------------------
-# GUI ROUTE (FRONTEND)
+# FRONTEND ROUTE
 # ---------------------------
 @app.route("/")
 def home():
@@ -42,7 +43,7 @@ def home():
 
 
 # ---------------------------
-# API ROUTE (BACKEND EXECUTION)
+# RUN CODE ROUTE
 # ---------------------------
 @app.route("/run", methods=["POST"])
 def run_code():
@@ -54,24 +55,24 @@ def run_code():
 
         code = data["code"]
 
-        # Parse code into AST
+        # Parse AST
         ast = parser.parse(code)
 
         if ast is None:
             return jsonify({"error": "Syntax error"}), 400
 
-        # Capture interpreter output
+        # Capture print output
         old_stdout = sys.stdout
         sys.stdout = buffer = io.StringIO()
 
-        run(ast, {})
+        # 🔥 FIX: NEW ENVIRONMENT EVERY RUN
+        env = Env()
+        run(ast, env)
 
         sys.stdout = old_stdout
         output = buffer.getvalue()
 
-        return jsonify({
-            "output": output
-        })
+        return jsonify({"output": output})
 
     except NovaError as e:
         return jsonify({"error": str(e)}), 400
@@ -81,7 +82,7 @@ def run_code():
 
 
 # ---------------------------
-# RUN SERVER
+# START SERVER
 # ---------------------------
 if __name__ == "__main__":
     import os
