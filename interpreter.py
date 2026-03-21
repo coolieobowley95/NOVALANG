@@ -376,10 +376,17 @@ def exec_stmt(stmt, env):
     elif t == 'pass':
         return
 
+    elif t == 'call':
+        func = env.get_func(stmt[1])
+        args = [eval_expr(a, env) for a in stmt[2]]
+        func(*args)
+    
     else:
         try:
             eval_expr(stmt, env)
-        except:
+        except (BreakEx, ContinueEx, ReturnEx, NovaError):
+            raise
+        except Exception:
             pass
 
 
