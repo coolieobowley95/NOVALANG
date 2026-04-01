@@ -57,7 +57,6 @@ class NovaObject:
     def __repr__(self):
         return f"<{self.classname} {self.attrs}>"
 
-
 class Env:
     """Environment/scope for variables, functions, and classes"""
     def __init__(self, parent=None):
