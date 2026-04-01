@@ -114,6 +114,8 @@ class Env:
             return self.parent.get_class(name)
         raise NovaError(f"Class '{name}' not defined")
 
+                #---END ENV Class ---
+
 
 # --- AST helpers ---
 def is_true(val):
@@ -131,7 +133,14 @@ def eval_expr(expr, env):
         tag = expr[0]
 
         if tag == 'var':
-            return env.get_var(expr[1])
+            var_name = expr[1]
+            line_no = expr[2] if len(expr) > 2 else None
+            try:
+                return env.get_var(var_name)
+            except NovaError as e:
+                if line_no is not None:
+                    raise NovaError(f"{e} (line {line_no})")
+                raise
 
         if tag == 'num':
             return expr[1]

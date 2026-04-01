@@ -3,7 +3,7 @@ display "NOVALANG COMPLETE FEATURE TEST"
 display "variable test"
 let x = 10
 let y = 5
-display x
+dicplay x
 display y
 
 display "arithmetic test"
@@ -57,8 +57,9 @@ end
 
 display "while loop"
 let i = 1
-while i < 4
-    display i
+let a = 20
+while i < 10
+    display i 
     i = i + 1
 end
 

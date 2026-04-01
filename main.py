@@ -39,6 +39,7 @@ import sys
 import os
 import traceback
 from parser import parser
+from lexer import lexer
 from interpreter import run, global_env, NovaError
 
 # Program metadata
@@ -112,7 +113,9 @@ def execute_code(code, filename="<stdin>"):
         code = '\n'.join(filtered_lines)
 
         # Parse the code
-        ast = parser.parse(code)
+        # Reset lexer line counter for each parse so syntax errors report correct lines.
+        lexer.lineno = 1
+        ast = parser.parse(code, lexer=lexer)
 
         if ast is None:
             print("Syntax error: Failed to parse code")

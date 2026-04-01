@@ -101,20 +101,20 @@ def p_assignment(p):
             op = '+' if p[2] == '+=' else '-'
             p[0] = ('assign_op', p[1], op, p[3])
 
-# Display/Print statement (space-separated arguments, no commas needed)
+# Display/Print statement (single expression or comma-separated expressions)
 def p_display(p):
     '''display : DISPLAY display_args
                | PRINT display_args'''
     p[0] = ('display', p[2])
 
-# Display arguments (space-separated, not comma-separated)
+# Display arguments (comma-separated)
 def p_display_args(p):
-    '''display_args : display_args expression
+    '''display_args : display_args COMMA expression
                     | expression'''
     if len(p) == 2:
         p[0] = [p[1]]
     else:
-        p[0] = p[1] + [p[2]]
+        p[0] = p[1] + [p[3]]
 
 # If statement
 def p_if_stmt(p):
@@ -399,7 +399,7 @@ def p_null(p):
 
 def p_identifier(p):
     'expression : IDENTIFIER'
-    p[0] = ('var', p[1])
+    p[0] = ('var', p[1], p.lineno(1))
 
 # Error handling
 def p_error(p):

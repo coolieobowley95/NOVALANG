@@ -1,110 +1,587 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NovaLang IDE</title>
-
 <style>
+:root {
+    --bg: #f3eee5;
+    --panel: #fffdf8;
+    --ink: #1f2933;
+    --muted: #6b7280;
+    --accent: #ef6f45;
+    --accent-2: #0e7490;
+    --line: #d6d3d1;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial;
-    background: #0f172a;
-    color: white;
+    margin: 0;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at 10% 10%, #fff6df 0%, #f3eee5 40%),
+        linear-gradient(120deg, #efe7dc, #f8f3ec);
+    min-height: 100vh;
+}
+
+.shell {
     display: flex;
-    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 320px;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: transform 0.25s ease;
+}
+
+.sidebar.closed {
+    transform: translateX(-100%);
+}
+
+.side-head {
+    display: flex;
     align-items: center;
-    height: 100vh;
+    justify-content: space-between;
+    gap: 0.5rem;
 }
 
-.container {
-    width: 80%;
-    max-width: 900px;
+.side-title {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
 }
 
-textarea {
-    width: 100%;
-    height: 200px;
-    background: #1e293b;
-    color: white;
-    border: none;
-    padding: 10px;
-    font-size: 16px;
+.btn {
+    border: 1px solid var(--line);
+    background: white;
+    color: var(--ink);
     border-radius: 8px;
+    padding: 0.45rem 0.8rem;
+    cursor: pointer;
+    font-weight: 700;
 }
 
-button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background: #22c55e;
-    border: none;
+.btn:hover {
+    border-color: var(--accent);
+}
+
+.btn.primary {
+    background: var(--accent);
     color: white;
-    font-size: 16px;
+    border-color: var(--accent);
+}
+
+.btn.secondary {
+    background: var(--accent-2);
+    color: white;
+    border-color: var(--accent-2);
+}
+
+.file-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: white;
+    overflow: auto;
+    min-height: 220px;
+}
+
+.tree-children {
+    list-style: none;
+    margin: 0.2rem 0 0.25rem 0.55rem;
+    padding: 0 0 0 0.55rem;
+    border-left: 1px dashed #e5e7eb;
+}
+
+.tree-item {
+    font-family: Consolas, monospace;
+    font-size: 0.9rem;
+}
+
+.tree-label {
+    display: block;
+    padding: 0.35rem 0.5rem;
     border-radius: 6px;
     cursor: pointer;
+    user-select: none;
 }
 
-button:hover {
-    background: #16a34a;
+.folder-label {
+    font-weight: 700;
+    color: #334155;
+}
+
+.folder-label::before {
+    content: "▸ ";
+    color: #64748b;
+}
+
+.tree-item.expanded > .folder-label::before {
+    content: "▾ ";
+}
+
+.tree-item.collapsed > .tree-children {
+    display: none;
+}
+
+.tree-label:hover {
+    background: #fff6ef;
+}
+
+.file-label.active {
+    background: #ffe9dd;
+    color: #9a3412;
+    font-weight: 700;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.75rem;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toolbar .spacer {
+    flex: 1;
+}
+
+.file-pill {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    font-family: Consolas, monospace;
+    background: #fff;
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
+.editor-wrap {
+    flex: 1;
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #111827;
+    position: relative;
+}
+
+.editor-shell {
+    width: 100%;
+    min-height: 360px;
+    display: grid;
+    grid-template-columns: 58px 1fr;
+}
+
+.line-numbers {
+    margin: 0;
+    padding: 1rem 0.55rem 1rem 0.45rem;
+    border-right: 1px solid #334155;
+    background: #0f172a;
+    color: #94a3b8;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    text-align: right;
+    user-select: none;
+    overflow: hidden;
+    white-space: pre;
+}
+
+#editor {
+    width: 100%;
+    height: 100%;
+    resize: none;
+    border: none;
+    outline: none;
+    padding: 1rem;
+    color: #ecfeff;
+    background: linear-gradient(180deg, #1f2937, #0b1020);
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    overflow: auto;
+}
+
+.editor-wrap.dragging {
+    box-shadow: 0 0 0 3px #fb923c inset;
 }
 
 .output {
-    margin-top: 20px;
-    background: #111827;
-    padding: 15px;
-    border-radius: 8px;
-    min-height: 80px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.8rem;
+    background: #fff;
+    min-height: 120px;
+    font-family: Consolas, monospace;
+    white-space: pre-wrap;
+}
+
+.status {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.toggle {
+    position: absolute;
+    top: 0.9rem;
+    left: 0.9rem;
+    z-index: 10;
+}
+
+.hidden {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 20;
+        height: 100vh;
+    }
+
+    .main {
+        padding-top: 3.6rem;
+    }
+
+    .toggle {
+        position: fixed;
+    }
 }
 </style>
 </head>
-
 <body>
+<button id="toggleSidebar" class="btn toggle">Files</button>
+<div class="shell">
+    <aside id="sidebar" class="sidebar">
+        <div class="side-head">
+            <h2 class="side-title">Directory</h2>
+            <button id="newFileBtn" class="btn primary">New File</button>
+        </div>
+        <ul id="fileList" class="file-list"></ul>
+        <div class="status" id="fileStatus">Loading files...</div>
+    </aside>
 
-<div class="container">
+    <main class="main">
+        <div class="toolbar">
+            <button id="saveBtn" class="btn">Save</button>
+            <button id="runBtn" class="btn secondary">Run</button>
+            <div class="spacer"></div>
+            <span id="activeFile" class="file-pill">No file selected</span>
+        </div>
 
-<h1>NovaLang IDE</h1>
+        <div id="editorWrap" class="editor-wrap">
+            <div class="editor-shell">
+                <pre id="lineNumbers" class="line-numbers">1</pre>
+                <textarea id="editor" spellcheck="false" wrap="off">let x = 10
+display x</textarea>
+            </div>
+        </div>
 
-<textarea id="code">
-let x = 10
-display x
-</textarea>
-
-<br>
-
-<button onclick="runCode()">Run</button>
-
-<div class="output" id="output">
-Output will appear here...
-</div>
-
+        <section>
+            <h3>Output</h3>
+            <div id="output" class="output">Output will appear here...</div>
+        </section>
+    </main>
 </div>
 
 <script>
-async function runCode() {
-    const code = document.getElementById("code").value;
+const sidebar = document.getElementById('sidebar');
+const toggleSidebarBtn = document.getElementById('toggleSidebar');
+const fileList = document.getElementById('fileList');
+const fileStatus = document.getElementById('fileStatus');
+const activeFile = document.getElementById('activeFile');
+const editor = document.getElementById('editor');
+const lineNumbers = document.getElementById('lineNumbers');
+const editorWrap = document.getElementById('editorWrap');
+const output = document.getElementById('output');
+const newFileBtn = document.getElementById('newFileBtn');
+const saveBtn = document.getElementById('saveBtn');
+const runBtn = document.getElementById('runBtn');
 
-    try {
-        const res = await fetch("/run", {   // ✅ FIXED (relative path)
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ code })
+let currentFilePath = null;
+let cachedFilePaths = [];
+const expandedFolders = new Set();
+
+function setStatus(msg) {
+    fileStatus.textContent = msg;
+}
+
+function setOutput(msg) {
+    output.textContent = msg;
+}
+
+function updateLineNumbers() {
+    const lineCount = Math.max(1, editor.value.split('\n').length);
+    const lines = [];
+    for (let i = 1; i <= lineCount; i++) {
+        lines.push(String(i));
+    }
+    lineNumbers.textContent = lines.join('\n');
+}
+
+function syncLineNumberScroll() {
+    lineNumbers.scrollTop = editor.scrollTop;
+}
+
+function setActiveFile(path) {
+    currentFilePath = path;
+    activeFile.textContent = path || 'No file selected';
+
+    [...document.querySelectorAll('.file-label')].forEach((item) => {
+        item.classList.toggle('active', item.dataset.path === path);
+    });
+}
+
+function buildFileTree(paths) {
+    const root = {};
+    paths.forEach((fullPath) => {
+        const parts = fullPath.split('/').filter(Boolean);
+        let node = root;
+        parts.forEach((part, index) => {
+            const isLast = index === parts.length - 1;
+            if (isLast) {
+                node[part] = fullPath;
+            } else {
+                if (!node[part] || typeof node[part] !== 'object') {
+                    node[part] = {};
+                }
+                node = node[part];
+            }
         });
+    });
+    return root;
+}
 
-        const data = await res.json();
+function collapseBranch(folderPath) {
+    [...expandedFolders].forEach((openPath) => {
+        if (openPath === folderPath || openPath.startsWith(`${folderPath}/`)) {
+            expandedFolders.delete(openPath);
+        }
+    });
+}
 
-        document.getElementById("output").innerText =
-            data.output || data.error;
+function renderTreeNodeMap(nodeMap, basePath = '') {
+    const ul = document.createElement('ul');
+    if (basePath) {
+        ul.className = 'tree-children';
+    }
 
+    const entries = Object.entries(nodeMap).sort((a, b) => {
+        const aIsDir = typeof a[1] === 'object';
+        const bIsDir = typeof b[1] === 'object';
+        if (aIsDir !== bIsDir) {
+            return aIsDir ? -1 : 1;
+        }
+        return a[0].localeCompare(b[0]);
+    });
+
+    entries.forEach(([name, value]) => {
+        const li = document.createElement('li');
+        li.className = 'tree-item';
+
+        if (typeof value === 'string') {
+            const fileLabel = document.createElement('div');
+            fileLabel.className = 'tree-label file-label';
+            fileLabel.textContent = name;
+            fileLabel.dataset.path = value;
+            fileLabel.draggable = true;
+
+            fileLabel.addEventListener('click', () => openFile(value));
+            fileLabel.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', value);
+                e.dataTransfer.effectAllowed = 'copy';
+            });
+
+            li.appendChild(fileLabel);
+        } else {
+            const folderPath = basePath ? `${basePath}/${name}` : name;
+            const isExpanded = expandedFolders.has(folderPath);
+
+            li.classList.add(isExpanded ? 'expanded' : 'collapsed');
+
+            const folderLabel = document.createElement('div');
+            folderLabel.className = 'tree-label folder-label';
+            folderLabel.textContent = name;
+            folderLabel.addEventListener('click', () => {
+                if (expandedFolders.has(folderPath)) {
+                    // Collapse this node and every expanded child below it.
+                    collapseBranch(folderPath);
+                } else {
+                    expandedFolders.add(folderPath);
+                }
+                renderFileTree(cachedFilePaths);
+            });
+
+            li.appendChild(folderLabel);
+            li.appendChild(renderTreeNodeMap(value, folderPath));
+        }
+
+        ul.appendChild(li);
+    });
+
+    return ul;
+}
+
+function renderFileTree(paths) {
+    fileList.innerHTML = '';
+    const tree = buildFileTree(paths);
+    fileList.appendChild(renderTreeNodeMap(tree));
+    setActiveFile(currentFilePath);
+}
+
+async function fetchJson(url, options = {}) {
+    const res = await fetch(url, options);
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.error || 'Request failed');
+    }
+    return data;
+}
+
+async function refreshFileList() {
+    try {
+        setStatus('Refreshing files...');
+        const data = await fetchJson('/api/files');
+        cachedFilePaths = data.files || [];
+        renderFileTree(cachedFilePaths);
+
+        setStatus(data.files.length ? `${data.files.length} file(s)` : 'No .nl files found');
     } catch (err) {
-        document.getElementById("output").innerText =
-            "Error connecting to server.";
+        setStatus(`Error: ${err.message}`);
     }
 }
-</script>
 
+async function openFile(path) {
+    try {
+        const data = await fetchJson(`/api/file?path=${encodeURIComponent(path)}`);
+        editor.value = data.code;
+        updateLineNumbers();
+        syncLineNumberScroll();
+        setActiveFile(data.path);
+        setOutput(`Opened ${data.path}`);
+    } catch (err) {
+        setOutput(`Open failed: ${err.message}`);
+    }
+}
+
+async function createFile() {
+    let path = prompt('Enter new file name (example: programs/demo.nl):', 'programs/new_file.nl');
+    if (!path) {
+        return;
+    }
+
+    path = path.trim();
+    if (!path.endsWith('.nl')) {
+        path += '.nl';
+    }
+
+    try {
+        await fetchJson('/api/file/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path, code: '' })
+        });
+
+        await refreshFileList();
+        await openFile(path);
+        setOutput(`Created ${path}`);
+    } catch (err) {
+        setOutput(`Create failed: ${err.message}`);
+    }
+}
+
+async function saveCurrentFile() {
+    if (!currentFilePath) {
+        throw new Error('Select or create a file first');
+    }
+
+    await fetchJson('/api/file/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: currentFilePath, code: editor.value })
+    });
+}
+
+async function runCurrentFile() {
+    try {
+        await saveCurrentFile();
+        const data = await fetchJson('/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: currentFilePath })
+        });
+
+        setOutput(data.output || '(No output)');
+    } catch (err) {
+        setOutput(`Run failed: ${err.message}`);
+    }
+}
+
+newFileBtn.addEventListener('click', createFile);
+
+saveBtn.addEventListener('click', async () => {
+    try {
+        await saveCurrentFile();
+        setOutput(`Saved ${currentFilePath}`);
+    } catch (err) {
+        setOutput(`Save failed: ${err.message}`);
+    }
+});
+
+runBtn.addEventListener('click', runCurrentFile);
+
+toggleSidebarBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('closed');
+});
+
+editor.addEventListener('input', updateLineNumbers);
+editor.addEventListener('scroll', syncLineNumberScroll);
+
+editorWrap.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    editorWrap.classList.add('dragging');
+});
+
+editorWrap.addEventListener('dragleave', () => {
+    editorWrap.classList.remove('dragging');
+});
+
+editorWrap.addEventListener('drop', (e) => {
+    e.preventDefault();
+    editorWrap.classList.remove('dragging');
+    const path = e.dataTransfer.getData('text/plain');
+    if (path) {
+        openFile(path);
+    }
+});
+
+updateLineNumbers();
+syncLineNumberScroll();
+refreshFileList();
+</script>
 </body>
 </html>
-
-
-
-
