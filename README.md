@@ -322,4 +322,7 @@ NOVALANG provides a simplified environment for studying programming language des
 
 # NOVALANG
 NOVALANG is a mini programming language designed for educational purposes to demonstrate compiler and interpreter concepts, including lexical analysis, syntax parsing, semantic analysis, and execution. It supports both explicit and implicit variable declaration, arithmetic operations, operator precedence, exception handling, and basic I/O.
->>>>>>> 9084398de947016940539bb48f0fd56b13440780
+
+# Domains
+ GitHub and Cloud Deployment: https://novalang-4x9v.onrender.com/ 
+ The GitHub repository URL is: https://github.com/coolieobowley95/NOVALANG
