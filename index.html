@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -6,13 +6,16 @@
 <title>NovaLang IDE</title>
 <style>
 :root {
-    --bg: #f3eee5;
-    --panel: #fffdf8;
-    --ink: #1f2933;
-    --muted: #6b7280;
-    --accent: #ef6f45;
-    --accent-2: #0e7490;
-    --line: #d6d3d1;
+    --bg: #040812;
+    --bg-2: #0a1630;
+    --panel: #0c1427;
+    --panel-2: #121d38;
+    --ink: #e6f5ff;
+    --muted: #7f9ab5;
+    --accent: #00d9ff;
+    --accent-2: #19ff8b;
+    --line: #1f345a;
+    --shadow: 0 12px 30px rgba(1, 12, 30, 0.5);
 }
 
 * {
@@ -21,11 +24,12 @@
 
 body {
     margin: 0;
-    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    font-family: "Franklin Gothic Medium", "Arial Narrow", "Segoe UI", sans-serif;
     color: var(--ink);
     background:
-        radial-gradient(circle at 10% 10%, #fff6df 0%, #f3eee5 40%),
-        linear-gradient(120deg, #efe7dc, #f8f3ec);
+        radial-gradient(circle at 8% 8%, rgba(0, 217, 255, 0.24) 0%, rgba(4, 8, 18, 0) 38%),
+        radial-gradient(circle at 92% 0%, rgba(25, 255, 139, 0.18) 0%, rgba(4, 8, 18, 0) 32%),
+        linear-gradient(130deg, var(--bg), var(--bg-2));
     min-height: 100vh;
 }
 
@@ -37,13 +41,14 @@ body {
 
 .sidebar {
     width: 320px;
-    background: var(--panel);
+    background: linear-gradient(180deg, var(--panel), #081125);
     border-right: 1px solid var(--line);
     padding: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     transition: transform 0.25s ease;
+    box-shadow: var(--shadow);
 }
 
 .sidebar.closed {
@@ -60,34 +65,38 @@ body {
 .side-title {
     margin: 0;
     font-size: 1rem;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
+    color: #95dbff;
 }
 
 .btn {
     border: 1px solid var(--line);
-    background: white;
+    background: linear-gradient(180deg, #0f1b36, #0b1529);
     color: var(--ink);
     border-radius: 8px;
     padding: 0.45rem 0.8rem;
     cursor: pointer;
     font-weight: 700;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn:hover {
     border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.22);
+    transform: translateY(-1px);
 }
 
 .btn.primary {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
+    background: linear-gradient(135deg, #00b8ff, var(--accent));
+    color: #041323;
+    border-color: #65eaff;
 }
 
 .btn.secondary {
-    background: var(--accent-2);
-    color: white;
-    border-color: var(--accent-2);
+    background: linear-gradient(135deg, #13d06f, var(--accent-2));
+    color: #032113;
+    border-color: #6effba;
 }
 
 .file-list {
@@ -96,7 +105,7 @@ body {
     padding: 0.5rem;
     border: 1px solid var(--line);
     border-radius: 10px;
-    background: white;
+    background: rgba(10, 18, 35, 0.72);
     overflow: auto;
     min-height: 220px;
 }
@@ -105,7 +114,7 @@ body {
     list-style: none;
     margin: 0.2rem 0 0.25rem 0.55rem;
     padding: 0 0 0 0.55rem;
-    border-left: 1px dashed #e5e7eb;
+    border-left: 1px dashed #2b4678;
 }
 
 .tree-item {
@@ -123,16 +132,16 @@ body {
 
 .folder-label {
     font-weight: 700;
-    color: #334155;
+    color: #9ad8ff;
 }
 
 .folder-label::before {
-    content: "▸ ";
-    color: #64748b;
+    content: "> ";
+    color: #57b5f3;
 }
 
 .tree-item.expanded > .folder-label::before {
-    content: "▾ ";
+    content: "v ";
 }
 
 .tree-item.collapsed > .tree-children {
@@ -140,12 +149,12 @@ body {
 }
 
 .tree-label:hover {
-    background: #fff6ef;
+    background: rgba(0, 217, 255, 0.14);
 }
 
 .file-label.active {
-    background: #ffe9dd;
-    color: #9a3412;
+    background: rgba(25, 255, 139, 0.2);
+    color: #b4ffd9;
     font-weight: 700;
 }
 
@@ -173,7 +182,7 @@ body {
     border-radius: 999px;
     padding: 0.2rem 0.7rem;
     font-family: Consolas, monospace;
-    background: #fff;
+    background: #0c1730;
     color: var(--muted);
     font-size: 0.86rem;
 }
@@ -184,8 +193,9 @@ body {
     border: 1px solid var(--line);
     border-radius: 12px;
     overflow: hidden;
-    background: #111827;
+    background: #060f23;
     position: relative;
+    box-shadow: var(--shadow);
 }
 
 .editor-shell {
@@ -198,9 +208,9 @@ body {
 .line-numbers {
     margin: 0;
     padding: 1rem 0.55rem 1rem 0.45rem;
-    border-right: 1px solid #334155;
-    background: #0f172a;
-    color: #94a3b8;
+    border-right: 1px solid #2a4b82;
+    background: #081325;
+    color: #6fa2c8;
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.95rem;
     line-height: 1.4;
@@ -217,8 +227,10 @@ body {
     border: none;
     outline: none;
     padding: 1rem;
-    color: #ecfeff;
-    background: linear-gradient(180deg, #1f2937, #0b1020);
+    color: #d8f4ff;
+    background:
+        radial-gradient(circle at top right, rgba(0, 217, 255, 0.08) 0%, rgba(8, 15, 34, 0) 36%),
+        linear-gradient(180deg, #162544, #090f22 60%);
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.95rem;
     line-height: 1.4;
@@ -226,14 +238,14 @@ body {
 }
 
 .editor-wrap.dragging {
-    box-shadow: 0 0 0 3px #fb923c inset;
+    box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.85) inset;
 }
 
 .output {
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 0.8rem;
-    background: #fff;
+    background: linear-gradient(180deg, #0f1a34, #0b1428);
     min-height: 120px;
     font-family: Consolas, monospace;
     white-space: pre-wrap;
@@ -242,6 +254,56 @@ body {
 .status {
     color: var(--muted);
     font-size: 0.9rem;
+}
+
+.assist-panel {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    padding: 0.75rem;
+}
+
+.assist-panel h3,
+section h3 {
+    margin: 0 0 0.45rem 0;
+    letter-spacing: 0.02em;
+    color: #9ad8ff;
+}
+
+.assist-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.assist-input {
+    flex: 1;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.5rem 0.7rem;
+    font-family: Consolas, monospace;
+    font-size: 0.92rem;
+    background: #091224;
+    color: #d8f4ff;
+}
+
+.assist-input::placeholder {
+    color: #6e8cab;
+}
+
+.assist-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.22);
+}
+
+.sidebar .assist-row {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.sidebar .assist-input {
+    width: 100%;
 }
 
 .toggle {
@@ -253,6 +315,22 @@ body {
 
 .hidden {
     display: none;
+}
+
+.sidebar,
+.main {
+    animation: reveal 360ms ease-out;
+}
+
+@keyframes reveal {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 900px) {
@@ -283,12 +361,21 @@ body {
         </div>
         <ul id="fileList" class="file-list"></ul>
         <div class="status" id="fileStatus">Loading files...</div>
+        <section class="assist-panel">
+            <h3>AI Code Assistant</h3>
+            <div class="assist-row">
+                <input id="assistPrompt" class="assist-input" type="text" placeholder='Example: write a while loop from 1 to 5 and display each value' />
+                <button id="assistBtn" class="btn secondary">Apply AI Edit</button>
+            </div>
+            <div id="assistStatus" class="status">Type an instruction, then apply it to the open file.</div>
+        </section>
     </aside>
 
     <main class="main">
         <div class="toolbar">
             <button id="saveBtn" class="btn">Save</button>
             <button id="runBtn" class="btn secondary">Run</button>
+            <button id="simulateBtn" class="btn primary">Simulate (LLM)</button>
             <div class="spacer"></div>
             <span id="activeFile" class="file-pill">No file selected</span>
         </div>
@@ -321,6 +408,10 @@ const output = document.getElementById('output');
 const newFileBtn = document.getElementById('newFileBtn');
 const saveBtn = document.getElementById('saveBtn');
 const runBtn = document.getElementById('runBtn');
+const simulateBtn = document.getElementById('simulateBtn');
+const assistPrompt = document.getElementById('assistPrompt');
+const assistBtn = document.getElementById('assistBtn');
+const assistStatus = document.getElementById('assistStatus');
 
 let currentFilePath = null;
 let cachedFilePaths = [];
@@ -332,6 +423,10 @@ function setStatus(msg) {
 
 function setOutput(msg) {
     output.textContent = msg;
+}
+
+function setAssistStatus(msg) {
+    assistStatus.textContent = msg;
 }
 
 function updateLineNumbers() {
@@ -537,7 +632,79 @@ async function runCurrentFile() {
 
         setOutput(data.output || '(No output)');
     } catch (err) {
-        setOutput(`Run failed: ${err.message}`);
+        setOutput(err.message || 'Run failed');
+    }
+}
+
+async function simulateCurrentCode() {
+    try {
+        const payload = {};
+
+        if (currentFilePath) {
+            await saveCurrentFile();
+            payload.path = currentFilePath;
+        } else {
+            payload.code = editor.value;
+        }
+
+        const data = await fetchJson('/simulate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        let details = '';
+        if (data.model) {
+            details += `\nModel: ${data.model}`;
+        }
+        if (data.log_path) {
+            details += `\nRecorded in: ${data.log_path}`;
+        }
+
+        setOutput((data.output || '(No output)') + details);
+    } catch (err) {
+        setOutput(err.message || 'Simulation failed');
+    }
+}
+
+async function applyAICodeEdit() {
+    const instruction = (assistPrompt.value || '').trim();
+    if (!instruction) {
+        setAssistStatus('Enter an instruction first.');
+        return;
+    }
+
+    try {
+        setAssistStatus('Applying AI edit...');
+        const payload = { instruction };
+
+        if (currentFilePath) {
+            await saveCurrentFile();
+            payload.path = currentFilePath;
+        } else {
+            payload.code = editor.value;
+        }
+
+        const data = await fetchJson('/assist-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        editor.value = data.updated_code || editor.value;
+        updateLineNumbers();
+        syncLineNumberScroll();
+
+        if (currentFilePath) {
+            await saveCurrentFile();
+        }
+
+        const summary = data.summary ? `\nSummary: ${data.summary}` : '';
+        setOutput(`AI edit applied.${summary}`);
+        setAssistStatus(`Applied with ${data.model || 'LLM'}${currentFilePath ? ` to ${currentFilePath}` : ''}.`);
+    } catch (err) {
+        setAssistStatus('AI edit failed.');
+        setOutput(err.message || 'AI edit failed');
     }
 }
 
@@ -553,6 +720,13 @@ saveBtn.addEventListener('click', async () => {
 });
 
 runBtn.addEventListener('click', runCurrentFile);
+simulateBtn.addEventListener('click', simulateCurrentCode);
+assistBtn.addEventListener('click', applyAICodeEdit);
+assistPrompt.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        applyAICodeEdit();
+    }
+});
 
 toggleSidebarBtn.addEventListener('click', () => {
     sidebar.classList.toggle('closed');
@@ -585,3 +759,4 @@ refreshFileList();
 </script>
 </body>
 </html>
+

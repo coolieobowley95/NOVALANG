@@ -395,8 +395,8 @@ def exec_stmt(stmt, env):
             eval_expr(stmt, env)
         except (BreakEx, ContinueEx, ReturnEx, NovaError):
             raise
-        except Exception:
-            pass
+        except Exception as e:
+            raise NovaError(str(e))
 
 
 # --- Built-in functions ---

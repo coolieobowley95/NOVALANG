@@ -38,7 +38,7 @@ A dynamically-typed language supporting:
 import sys
 import os
 import traceback
-from parser import parser
+from parser import parser, NovaSyntaxError
 from lexer import lexer
 from interpreter import run, global_env, NovaError
 
@@ -117,13 +117,11 @@ def execute_code(code, filename="<stdin>"):
         lexer.lineno = 1
         ast = parser.parse(code, lexer=lexer)
 
-        if ast is None:
-            print("Syntax error: Failed to parse code")
-            return
-
         # Execute the AST
         run(ast, global_env)
 
+    except (NovaSyntaxError, SyntaxError) as e:
+        print(f"{e}")
     except NovaError as e:
         print(f"Error: {e}")
     except Exception as e:

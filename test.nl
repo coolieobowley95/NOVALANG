@@ -3,9 +3,9 @@ let B = 40
 let C = A + B * B
 
 try
-    C = C / 10
+    C = C / 0
 catch
-     dicplay "Error: Division by zero attempted but not allowed."
+     display "Error: Division by zero attempted but not allowed."
 end
 
 display "The result is "

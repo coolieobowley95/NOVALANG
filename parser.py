@@ -27,6 +27,11 @@ Builds Abstract Syntax Tree (AST) for the NOVALANG language
 import ply.yacc as yacc
 from lexer import tokens
 
+
+class NovaSyntaxError(Exception):
+    """Raised when parsing fails and execution must stop."""
+    pass
+
 # Operator precedence (PEMDAS/BODMAS order)
 precedence = (
     ('left', 'OR'),
@@ -404,9 +409,9 @@ def p_identifier(p):
 # Error handling
 def p_error(p):
     if p:
-        print(f"Syntax Error at '{p.value}' (line {p.lineno})")
+        raise NovaSyntaxError(f"Syntax Error at '{p.value}' (line {p.lineno})")
     else:
-        print("Syntax Error: Unexpected end of input")
+        raise NovaSyntaxError("Syntax Error: Unexpected end of input")
 
 # Build parser
 parser = yacc.yacc(debug=False, write_tables=False)

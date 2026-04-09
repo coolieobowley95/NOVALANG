@@ -3,7 +3,7 @@ display "NOVALANG COMPLETE FEATURE TEST"
 display "variable test"
 let x = 10
 let y = 5
-dicplay x
+display x
 display y
 
 display "arithmetic test"
