@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Group Members: 
 # Member 1:
     Name: Tashana Henry 
