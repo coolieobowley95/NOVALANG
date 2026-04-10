@@ -176,6 +176,15 @@ def p_func_call(p):
     else:
         p[0] = ('call', p[1], p[3])
 
+# Function call expression (enables: let x = myFunc(1, 2))
+def p_call_expr(p):
+    '''expression : IDENTIFIER LPAREN RPAREN
+                  | IDENTIFIER LPAREN args RPAREN'''
+    if len(p) == 4:
+        p[0] = ('call', p[1], [])
+    else:
+        p[0] = ('call', p[1], p[3])
+
 # Argument list
 def p_args(p):
     '''args : args COMMA expression
