@@ -205,6 +205,15 @@ body {
     grid-template-columns: 58px 1fr;
 }
 
+.code-layer {
+    position: relative;
+    width: 100%;
+    min-height: 360px;
+    background:
+        radial-gradient(circle at top right, rgba(0, 217, 255, 0.08) 0%, rgba(8, 15, 34, 0) 36%),
+        linear-gradient(180deg, #162544, #090f22 60%);
+}
+
 .line-numbers {
     margin: 0;
     padding: 1rem 0.55rem 1rem 0.45rem;
@@ -220,21 +229,58 @@ body {
     white-space: pre;
 }
 
+.line-num {
+    display: block;
+    padding: 0 0.2rem;
+    border-radius: 4px;
+}
+
+.line-num.error {
+    color: #ffd4d4;
+    background: rgba(255, 83, 83, 0.25);
+    box-shadow: inset 2px 0 0 #ff5353;
+}
+
+#syntaxLayer,
 #editor {
     width: 100%;
     height: 100%;
-    resize: none;
-    border: none;
-    outline: none;
+    margin: 0;
     padding: 1rem;
-    color: #d8f4ff;
-    background:
-        radial-gradient(circle at top right, rgba(0, 217, 255, 0.08) 0%, rgba(8, 15, 34, 0) 36%),
-        linear-gradient(180deg, #162544, #090f22 60%);
     font-family: Consolas, "Courier New", monospace;
     font-size: 0.95rem;
     line-height: 1.4;
+    white-space: pre;
+}
+
+#syntaxLayer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    color: #d8f4ff;
+    pointer-events: none;
+}
+
+#syntaxLayer .token-comment {
+    color: #6df5a5;
+    font-style: italic;
+}
+
+#editor {
+    position: absolute;
+    inset: 0;
+    resize: none;
+    border: none;
+    outline: none;
+    color: transparent;
+    caret-color: #d8f4ff;
+    background: transparent;
     overflow: auto;
+}
+
+#editor::selection {
+    color: transparent;
+    background: rgba(0, 217, 255, 0.28);
 }
 
 .editor-wrap.dragging {
@@ -383,8 +429,11 @@ section h3 {
         <div id="editorWrap" class="editor-wrap">
             <div class="editor-shell">
                 <pre id="lineNumbers" class="line-numbers">1</pre>
-                <textarea id="editor" spellcheck="false" wrap="off">let x = 10
+                <div class="code-layer">
+                    <pre id="syntaxLayer" aria-hidden="true"></pre>
+                    <textarea id="editor" spellcheck="false" wrap="off">let x = 10
 display x</textarea>
+                </div>
             </div>
         </div>
 
@@ -402,6 +451,7 @@ const fileList = document.getElementById('fileList');
 const fileStatus = document.getElementById('fileStatus');
 const activeFile = document.getElementById('activeFile');
 const editor = document.getElementById('editor');
+const syntaxLayer = document.getElementById('syntaxLayer');
 const lineNumbers = document.getElementById('lineNumbers');
 const editorWrap = document.getElementById('editorWrap');
 const output = document.getElementById('output');
@@ -416,6 +466,7 @@ const assistStatus = document.getElementById('assistStatus');
 let currentFilePath = null;
 let cachedFilePaths = [];
 const expandedFolders = new Set();
+let errorLineNumbers = new Set();
 
 function setStatus(msg) {
     fileStatus.textContent = msg;
@@ -433,13 +484,140 @@ function updateLineNumbers() {
     const lineCount = Math.max(1, editor.value.split('\n').length);
     const lines = [];
     for (let i = 1; i <= lineCount; i++) {
-        lines.push(String(i));
+        const isError = errorLineNumbers.has(i);
+        lines.push(`<span class="line-num${isError ? ' error' : ''}">${i}</span>`);
     }
-    lineNumbers.textContent = lines.join('\n');
+    lineNumbers.innerHTML = lines.join('');
 }
 
-function syncLineNumberScroll() {
+function clearErrorLines() {
+    if (errorLineNumbers.size === 0) {
+        return;
+    }
+    errorLineNumbers = new Set();
+    updateLineNumbers();
+}
+
+function extractErrorLineNumbers(message) {
+    const text = String(message || '');
+    const found = new Set();
+    const linePattern = /(?:\(|\b)line\s+(\d+)(?:\)|\b)/gi;
+    let match = null;
+
+    while ((match = linePattern.exec(text)) !== null) {
+        const line = Number(match[1]);
+        if (Number.isInteger(line) && line > 0) {
+            found.add(line);
+        }
+    }
+
+    return [...found];
+}
+
+function setErrorLinesFromMessage(message) {
+    const lines = extractErrorLineNumbers(message);
+    if (!lines.length) {
+        return;
+    }
+    errorLineNumbers = new Set(lines);
+    updateLineNumbers();
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function renderSyntaxHighlight() {
+    const src = editor.value || '';
+    let html = '';
+    let i = 0;
+    let inString = false;
+    let inLineComment = false;
+    let inBlockComment = false;
+
+    while (i < src.length) {
+        const ch = src[i];
+        const next = src[i + 1];
+        const prev = i > 0 ? src[i - 1] : '';
+
+        if (inLineComment) {
+            if (ch === '\n') {
+                html += '</span>\n';
+                inLineComment = false;
+                i += 1;
+                continue;
+            }
+            html += escapeHtml(ch);
+            i += 1;
+            continue;
+        }
+
+        if (inBlockComment) {
+            if (ch === '*' && next === '/') {
+                html += '*/</span>';
+                inBlockComment = false;
+                i += 2;
+                continue;
+            }
+            html += escapeHtml(ch);
+            i += 1;
+            continue;
+        }
+
+        if (inString) {
+            html += escapeHtml(ch);
+            if (ch === '"' && prev !== '\\') {
+                inString = false;
+            }
+            i += 1;
+            continue;
+        }
+
+        if (ch === '"') {
+            inString = true;
+            html += '"';
+            i += 1;
+            continue;
+        }
+
+        if (ch === '-' && next === '-') {
+            html += '<span class="token-comment">--';
+            inLineComment = true;
+            i += 2;
+            continue;
+        }
+
+        if (ch === '/' && next === '*') {
+            html += '<span class="token-comment">/*';
+            inBlockComment = true;
+            i += 2;
+            continue;
+        }
+
+        html += escapeHtml(ch);
+        i += 1;
+    }
+
+    if (inLineComment || inBlockComment) {
+        html += '</span>';
+    }
+
+    syntaxLayer.innerHTML = html || ' ';
+}
+
+function syncEditorScroll() {
     lineNumbers.scrollTop = editor.scrollTop;
+    syntaxLayer.scrollTop = editor.scrollTop;
+    syntaxLayer.scrollLeft = editor.scrollLeft;
+}
+
+function refreshEditorView() {
+    updateLineNumbers();
+    renderSyntaxHighlight();
+    syncEditorScroll();
 }
 
 function setActiveFile(path) {
@@ -574,8 +752,8 @@ async function openFile(path) {
     try {
         const data = await fetchJson(`/api/file?path=${encodeURIComponent(path)}`);
         editor.value = data.code;
-        updateLineNumbers();
-        syncLineNumberScroll();
+        clearErrorLines();
+        refreshEditorView();
         setActiveFile(data.path);
         setOutput(`Opened ${data.path}`);
     } catch (err) {
@@ -630,8 +808,10 @@ async function runCurrentFile() {
             body: JSON.stringify({ path: currentFilePath })
         });
 
+        clearErrorLines();
         setOutput(data.output || '(No output)');
     } catch (err) {
+        setErrorLinesFromMessage(err.message || '');
         setOutput(err.message || 'Run failed');
     }
 }
@@ -692,8 +872,7 @@ async function applyAICodeEdit() {
         });
 
         editor.value = data.updated_code || editor.value;
-        updateLineNumbers();
-        syncLineNumberScroll();
+        refreshEditorView();
 
         if (currentFilePath) {
             await saveCurrentFile();
@@ -732,8 +911,8 @@ toggleSidebarBtn.addEventListener('click', () => {
     sidebar.classList.toggle('closed');
 });
 
-editor.addEventListener('input', updateLineNumbers);
-editor.addEventListener('scroll', syncLineNumberScroll);
+editor.addEventListener('input', refreshEditorView);
+editor.addEventListener('scroll', syncEditorScroll);
 
 editorWrap.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -753,8 +932,7 @@ editorWrap.addEventListener('drop', (e) => {
     }
 });
 
-updateLineNumbers();
-syncLineNumberScroll();
+refreshEditorView();
 refreshFileList();
 </script>
 </body>

@@ -70,6 +70,7 @@ def p_statement(p):
                  | func_def
                  | class_def
                  | func_call
+                 | method_call_stmt
                  | return_stmt
                  | try_stmt
                  | break_stmt
@@ -176,6 +177,15 @@ def p_func_call(p):
     else:
         p[0] = ('call', p[1], p[3])
 
+# Method call statement
+def p_method_call_stmt(p):
+    '''method_call_stmt : IDENTIFIER DOT IDENTIFIER LPAREN RPAREN
+                        | IDENTIFIER DOT IDENTIFIER LPAREN args RPAREN'''
+    if len(p) == 6:
+        p[0] = ('method_call', p[1], p[3], [])
+    else:
+        p[0] = ('method_call', p[1], p[3], p[5])
+
 # Function call expression (enables: let x = myFunc(1, 2))
 def p_call_expr(p):
     '''expression : IDENTIFIER LPAREN RPAREN
@@ -184,6 +194,15 @@ def p_call_expr(p):
         p[0] = ('call', p[1], [])
     else:
         p[0] = ('call', p[1], p[3])
+
+# Class instantiation expression
+def p_new_expr(p):
+    '''expression : NEW IDENTIFIER LPAREN RPAREN
+                  | NEW IDENTIFIER LPAREN args RPAREN'''
+    if len(p) == 5:
+        p[0] = ('new', p[2], [])
+    else:
+        p[0] = ('new', p[2], p[4])
 
 # Argument list
 def p_args(p):

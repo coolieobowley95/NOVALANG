@@ -53,6 +53,7 @@ reserved = {
     'continue': 'CONTINUE',
     'class': 'CLASS',
     'extends': 'EXTENDS',
+    'new': 'NEW',
     'null': 'NULL',
     'pass': 'PASS',
     'range': 'RANGE',

@@ -47,6 +47,8 @@ class NovaObject:
     def __init__(self, classname, attrs=None):
         self.classname = classname
         self.attrs = attrs or {}
+        self.field_names = set()
+        self.instance_env = None
 
     def get(self, name, default=None):
         return self.attrs.get(name, default)
@@ -120,6 +122,115 @@ class Env:
 # --- AST helpers ---
 def is_true(val):
     return val is not None and val is not False
+
+
+def _normalize_block(block):
+    if isinstance(block, list):
+        return block
+    if isinstance(block, tuple):
+        return [block]
+    return []
+
+
+def _collect_class_chain(class_name, env, seen=None):
+    if seen is None:
+        seen = set()
+    if class_name in seen:
+        raise NovaError(f"Circular inheritance detected for class '{class_name}'")
+    seen.add(class_name)
+
+    class_stmt = env.get_class(class_name)
+    if not isinstance(class_stmt, tuple) or not class_stmt or class_stmt[0] != 'class':
+        raise NovaError(f"Invalid class definition for '{class_name}'")
+
+    base_name = class_stmt[2]
+    chain = []
+    if base_name:
+        chain.extend(_collect_class_chain(base_name, env, seen))
+    chain.append(class_stmt)
+    return chain
+
+
+def _sync_fields_to_object(obj):
+    if obj.instance_env is None:
+        return
+    for name in obj.field_names:
+        if name in obj.instance_env.vars:
+            obj.set(name, obj.instance_env.vars[name])
+
+
+def _sync_object_to_fields(obj):
+    if obj.instance_env is None:
+        return
+    for name, value in obj.attrs.items():
+        if callable(value) or name.startswith('__'):
+            continue
+        obj.instance_env.vars[name] = value
+        obj.field_names.add(name)
+
+
+def _build_bound_method(obj, params, body):
+    def method(*args):
+        _sync_object_to_fields(obj)
+
+        method_env = Env(obj.instance_env)
+        method_env.define_var('this', obj)
+        for pname, pval in zip(params, args):
+            method_env.define_var(pname, pval)
+
+        try:
+            exec_stmt(body, method_env)
+        except ReturnEx as r:
+            _sync_object_to_fields(obj)
+            return r.val
+
+        _sync_object_to_fields(obj)
+        return None
+
+    return method
+
+
+def _instantiate_object(class_name, args, env):
+    class_chain = _collect_class_chain(class_name, env)
+    obj = NovaObject(class_name)
+
+    instance_env = Env(env)
+    obj.instance_env = instance_env
+    instance_env.define_var('this', obj)
+
+    for class_stmt in class_chain:
+        body = _normalize_block(class_stmt[3])
+        for stmt in body:
+            if not isinstance(stmt, tuple) or not stmt:
+                continue
+
+            t = stmt[0]
+            if t == 'let':
+                field_name = stmt[1]
+                field_value = eval_expr(stmt[2], instance_env)
+                instance_env.define_var(field_name, field_value)
+                obj.set(field_name, field_value)
+                obj.field_names.add(field_name)
+            elif t == 'func':
+                method_name = stmt[1]
+                params = stmt[2]
+                method_body = stmt[3]
+                obj.set(method_name, _build_bound_method(obj, params, method_body))
+            elif t == 'class':
+                # Nested class declarations are not instance members.
+                continue
+            else:
+                exec_stmt(stmt, instance_env)
+                _sync_fields_to_object(obj)
+                _sync_object_to_fields(obj)
+
+    init_method = obj.get('init')
+    if callable(init_method):
+        init_method(*args)
+    elif args:
+        raise NovaError(f"Class '{class_name}' does not define init(...)")
+
+    return obj
 
 
 # --- Expression evaluator ---
@@ -229,8 +340,18 @@ def eval_expr(expr, env):
         if tag == 'call':
             func_name = expr[1]
             args = [eval_expr(a, env) for a in expr[2]]
-            func = env.get_func(func_name)
+            try:
+                func = env.get_func(func_name)
+            except NovaError:
+                func = env.get_var(func_name)
+            if not callable(func):
+                raise NovaError(f"'{func_name}' is not callable")
             return func(*args)
+
+        if tag == 'new':
+            class_name = expr[1]
+            args = [eval_expr(a, env) for a in expr[2]]
+            return _instantiate_object(class_name, args, env)
 
         if tag == 'call_builtin':
             name = expr[1]
@@ -264,6 +385,7 @@ def eval_expr(expr, env):
                 method_fn = obj.attrs.get(method_name)
                 if callable(method_fn):
                     return method_fn(*args)
+                raise NovaError(f"Method '{method_name}' not found on '{obj.classname}'")
             return None
 
     raise NovaError(f"Unknown expression type: {expr}")
@@ -386,7 +508,12 @@ def exec_stmt(stmt, env):
         return
 
     elif t == 'call':
-        func = env.get_func(stmt[1])
+        try:
+            func = env.get_func(stmt[1])
+        except NovaError:
+            func = env.get_var(stmt[1])
+        if not callable(func):
+            raise NovaError(f"'{stmt[1]}' is not callable")
         args = [eval_expr(a, env) for a in stmt[2]]
         func(*args)
     
