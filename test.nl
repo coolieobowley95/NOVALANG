@@ -1,4 +1,4 @@
-/*
+
 let A = 20
 let B = 40
 let C = A + B * B
@@ -11,7 +11,7 @@ end
 
 display "The result is "
 display C
-
+/*
 func add(a, b)
     let A = 100 
     return a + b + A
@@ -20,9 +20,9 @@ end
 let result = add(20, 40)
 display "Result: "
 display result
-
+*/
 func greet()
-    display "Hello from function"
+    display "Hello from Greet"
 end
 
 func car()
@@ -37,7 +37,7 @@ let i = 1
 while i < 10
     display "I Love you"
     if i == 6
-        greet()
+        --greet()
     end
     i = i + 1
 end
@@ -45,7 +45,7 @@ end
 greet()
 
 car()
-*/
+
 display "Person class declared"
 
 class Counter
@@ -63,7 +63,7 @@ class Counter
         return this.value
     end
    func addNum(a,b)
-       this.value = this.value + a
+   this.value = this.value + a
        this.value = this.value + b
        display "Result is :", this.value
    end

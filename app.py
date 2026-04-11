@@ -632,7 +632,9 @@ def run_code():
         ast = parser.parse(code, lexer=lexer)
 
         sys.stdout = buffer = io.StringIO()
-        run(ast, global_env)
+        execution_env = Env()
+        add_builtins(execution_env)
+        run(ast, execution_env)
         output = buffer.getvalue()
 
         return jsonify({'output': output, 'path': used_path})

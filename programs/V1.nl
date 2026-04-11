@@ -7,7 +7,7 @@ end
 let a = 1
 let b = 3
 
-let d = add(3,4)
+let d = add(a,b)
 
 display d
 
